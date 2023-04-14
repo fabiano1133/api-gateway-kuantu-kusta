@@ -1,4 +1,4 @@
-import { Controller, Logger } from '@nestjs/common';
+import { BadRequestException, Controller, Logger } from '@nestjs/common';
 import { ShoppingCartService } from './shopping-cart.service';
 import {
   Ctx,
@@ -68,6 +68,26 @@ export class ShoppingCartController {
     } catch (error) {
       this.logger.error(error);
       await channel.ack(originalMessage);
+    }
+  }
+
+  @EventPattern('remove-product')
+  async removeProductInCart(@Payload() data: any, @Ctx() context: RmqContext) {
+    const channel = context.getChannelRef();
+    const originalMessage = context.getMessage();
+
+    try {
+      const id = data.id;
+      const _id = data._id;
+      const service = await this.shoppingCartService.removeProductInCart(
+        id,
+        _id,
+      );
+      this.logger.log(service);
+      await channel.ack(originalMessage);
+    } catch (error) {
+      await channel.ack(originalMessage);
+      throw new BadRequestException();
     }
   }
 }

@@ -92,4 +92,22 @@ export class ProductController {
     });
     this.logger.log(`product: ${JSON.stringify(_id)} add to cart: ${id}`);
   }
+
+  @Post('cartid/:id/productid/:_id/remove')
+  async removeProductInCart(
+    @Param('id') id: string,
+    @Param('_id') _id: string,
+  ): Promise<void> {
+    const shoppingCartFound = await this.shoppingCartProxyService
+      .send('get-cart', id)
+      .toPromise();
+
+    if (!shoppingCartFound) throw new BadRequestException('Cart not found');
+
+    await this.shoppingCartProxyService.emit('remove-product', {
+      id,
+      _id,
+    });
+    this.logger.log(`product: ${JSON.stringify(_id)} remove to cart: ${id}`);
+  }
 }

@@ -3,6 +3,7 @@ import { Repository } from 'typeorm';
 import { ShoppingCart } from './entities/shopping-cart.entity';
 import { RpcException } from '@nestjs/microservices';
 import { UpdateCartDTO } from './DTO/update-cart.dto';
+import { AnyArray } from 'mongoose';
 
 @Injectable()
 export class ShoppingCartService {
@@ -55,5 +56,25 @@ export class ShoppingCartService {
       this.logger.error(error);
       throw new RpcException(`ERROR: ${error.message}`);
     }
+  }
+  async removeProductInCart(id: string, _id: string): Promise<void> {
+    const cartFound = await this.shoppingCartRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    function removePorId(products: any[], _id: string) {
+      const result = products.filter((productId: any) => {
+        return productId._id == _id;
+      });
+      for (const product of result) {
+        const productIndex = products.indexOf(product);
+        products.splice(productIndex, 1);
+      }
+    }
+    removePorId(cartFound.products, _id);
+
+    await this.updateCart(id, cartFound);
   }
 }
